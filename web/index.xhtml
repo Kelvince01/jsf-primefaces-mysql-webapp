@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Employees CRUD</title>
+    </h:head>
+    <h:body>
+        <div class="card crud-demo" responsive="true">
+    <h:form id="form">
+        <p:growl id="messages" showDetail="true" />
+
+        <p:toolbar>
+            <p:toolbarGroup>
+                <p:commandButton value="New" icon="pi pi-plus" actionListener="#{crudView.openNew}"
+                    update=":dialogs:manage-employee-content" oncomplete="PF('manageEmployeeDialog').show()"
+                    styleClass="ui-button-success" style="margin-right: .5rem">
+                    <p:resetInput target=":dialogs:manage-employee-content" />
+                </p:commandButton>
+                <p:commandButton id="delete-employees-button" value="#{crudView.deleteButtonMessage}"
+                    icon="pi pi-trash" actionListener="#{crudView.deleteSelectedEmployees}"
+                    styleClass="ui-button-danger" disabled="#{!crudView.hasSelectedEmployees()}" update="@this">
+                    <p:confirm header="Confirmation" message="Delete the selected employees?"
+                        icon="pi pi-exclamation-triangle" />
+                </p:commandButton>
+            </p:toolbarGroup>
+            <p:toolbarGroup align="right">
+                <p:commandButton value="Export" icon="pi pi-upload" styleClass="ui-button-help" ajax="false">
+                    <p:dataExporter type="pdf" target="dt-employees" fileName="employees" />
+                </p:commandButton>
+            </p:toolbarGroup>
+        </p:toolbar>
+
+        <p:dataTable id="dt-employees" widgetVar="dtEmployees" var="employee" value="#{crudView.employees}"
+            styleClass="employees-table" selection="#{crudView.selectedEmployees}"
+            rowKey="#{employee.id}" paginator="true" rows="10" rowSelectMode="add" paginatorPosition="bottom">
+            <f:facet name="header">
+                <div class="employees-table-header">
+                    <span style="font-weight: bold">PRODUCTS</span> <span
+                        class="filter-container ui-input-icon-left"> <i class="pi pi-search"></i> <p:inputText
+                            id="globalFilter" onkeyup="PF('dtEmployees').filter()" placeholder="Search" />
+                    </span>
+
+                </div>
+            </f:facet>
+
+            <p:ajax event="rowSelect" update=":form:delete-employees-button" />
+            <p:ajax event="rowUnselect" update=":form:delete-employees-button" />
+            <p:ajax event="rowSelectCheckbox" update=":form:delete-employees-button" />
+            <p:ajax event="rowUnselectCheckbox" update=":form:delete-employees-button" />
+            <p:ajax event="toggleSelect" update=":form:delete-employees-button" />
+
+            <p:column selectionMode="multiple" exportable="false"></p:column>
+
+            <p:column headerText="Code" sortBy="#{employee.id}" filterBy="#{employee.id}">
+                <h:outputText value="#{employee.id}" />
+            </p:column>
+            <p:column headerText="Name" sortBy="#{employee.name}" filterBy="#{employee.name}">
+                <h:outputText value="#{employee.name}" />
+            </p:column>
+            <p:column headerText="Image" exportable="false">
+                <p:graphicImage name="images/employee/#{employee.image}" library="demo" styleClass="employee-image" />
+            </p:column>
+            <p:column headerText="Price" sortBy="#{employee.price}">
+                <h:outputText value="#{employee.price}" style="font-weight: 700">
+                    <f:convertNumber currencySymbol="$" type="currency" />
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Category" sortBy="#{employee.employmentDate}" filterBy="#{employee.employmentDate}">
+                <h:outputText value="#{employee.employmentDate}" />
+            </p:column>
+            <p:column headerText="Status" sortBy="#{employee.inventoryStatus}"
+                filterBy="#{employee.inventoryStatus}">
+                <h:outputText styleClass="employee-badge status-#{employee.inventoryStatus.name().toLowerCase()}"
+                    value="#{employee.inventoryStatus.text}" />
+            </p:column>
+            <p:column exportable="false">
+                <p:commandButton icon="pi pi-pencil" update=":dialogs:manage-employee-content"
+                    oncomplete="PF('manageEmployeeDialog').show()"
+                    styleClass="edit-button rounded-button ui-button-success" process="@this">
+                    <f:setPropertyActionListener value="#{employee}" target="#{crudView.selectedEmployee}" />
+                    <p:resetInput target=":dialogs:manage-employee-content" />
+                </p:commandButton>
+                <p:commandButton class="ui-button-warning rounded-button" icon="pi pi-trash" process="@this"
+                    oncomplete="PF('deleteEmployeeDialog').show()">
+                    <f:setPropertyActionListener value="#{employee}" target="#{crudView.selectedEmployee}" />
+                </p:commandButton>
+            </p:column>
+
+        </p:dataTable>
+    </h:form>
+
+    <h:form id="dialogs">
+        <p:dialog header="Employee Details" showEffect="fade" modal="true" widgetVar="manageEmployeeDialog">
+            <p:outputPanel id="manage-employee-content" class="ui-fluid">
+                <p:outputPanel rendered="#{not empty crudView.selectedEmployee}">
+                    <div class="field">
+                        <p:outputLabel for="name">Name</p:outputLabel>
+                        <p:inputText id="name" value="#{crudView.selectedEmployee.name}" required="true" />
+                    </div>
+                    <div class="field">
+                        <p:outputLabel for="email">Email</p:outputLabel>
+                        <p:inputText id="email" value="#{crudView.selectedEmployee.email}" />
+                    </div>
+                    <div class="field">
+                        <p:outputLabel for="employmentDate">Employment Date</p:outputLabel>
+                        <p:inputText id="employmentDate" value="#{crudView.selectedEmployee.employmentDate}" />
+                    </div>
+                    <div class="field">
+                        <p:outputLabel for="category">Category</p:outputLabel>
+                        <p:selectOneRadio id="category" value="#{crudView.selectedEmployee.isActive}"
+                            layout="responsive" columns="2">
+                            <f:selectItem itemLabel="Yes" itemValue="Yes" />
+                            <f:selectItem itemLabel="No" itemValue="No" />
+                        </p:selectOneRadio>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+
+            <f:facet name="footer">
+                <p:commandButton value="Save" icon="pi pi-check" actionListener="#{crudView.saveEmployee}"
+                    update="manage-employee-content" process="manage-employee-content @this" />
+                <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageEmployeeDialog').hide()"
+                    class="ui-button-secondary" type="button" />
+            </f:facet>
+        </p:dialog>
+
+        <p:confirmDialog widgetVar="deleteEmployeeDialog" showEffect="fade" width="300"
+            message="Delete the employee?" header="Confirm" severity="warn">
+            <p:commandButton value="Yes" icon="pi pi-check" actionListener="#{crudView.deleteEmployee}"
+                process="@this" oncomplete="PF('deleteEmployeeDialog').hide()" />
+            <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"
+                onclick="PF('deleteEmployeeDialog').hide()" />
+        </p:confirmDialog>
+
+        <p:confirmDialog global="true" showEffect="fade" width="300">
+            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"
+                icon="pi pi-times" />
+        </p:confirmDialog>
+    </h:form>
+</div>
+    </h:body>
+</html>
+
